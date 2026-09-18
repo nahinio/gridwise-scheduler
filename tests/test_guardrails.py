@@ -69,7 +69,6 @@ REJECTED = [
     ("a string", "not_an_object"),
     (None, "not_an_object"),
     ([llm("no_op")], "not_an_object"),
-    (llm("no_op", note_index=2), "note_index_mismatch"),
     (llm("shed_load", hours=[1]), "unknown_type"),
     (llm("no_op") | {"directive_type": None}, "unknown_type"),
     (llm("no_op", applies=True), "applies_type_conflict"),
@@ -106,6 +105,12 @@ def test_hours_are_deduplicated_sorted_and_clipped_to_the_day() -> None:
     assert isinstance(result, Accepted)
     assert result.directive == NoDischarge(hours=(22, 23))
     assert result.normalised
+
+
+def test_note_mapping_is_owned_by_the_service_not_the_model() -> None:
+    result = check(llm("no_charge_window", hours=[4], note_index=7), note_index=1)
+    assert isinstance(result, Accepted)
+    assert result.directive == NoCharge(hours=(4,)) and result.normalised
 
 
 def test_missing_note_index_and_applies_are_tolerated() -> None:

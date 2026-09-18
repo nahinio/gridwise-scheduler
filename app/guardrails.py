@@ -81,10 +81,10 @@ def validate_interpretation(
     if not isinstance(raw, dict):
         return GuardrailReject("not_an_object", "Return exactly one JSON object.")
 
-    # G1 - the entry must describe the note we asked about.
-    reported_index = raw.get("note_index")
-    if reported_index is not None and reported_index != note_index:
-        return GuardrailReject("note_index_mismatch", f"note_index must be {note_index}.")
+    # G1 - note mapping is owned by this service, never by the model: each note gets its own
+    # call and the response index is set by us, so every note appears exactly once, in order.
+    # A model that echoes a different note_index is repaired, not trusted.
+    index_repaired = raw.get("note_index") not in (None, note_index)
 
     # G2 - only the six published directive types exist.
     directive_type = raw.get("directive_type")
@@ -104,10 +104,11 @@ def validate_interpretation(
 
     explanation = _clean_explanation(raw.get("explanation"), directive_type)
     if directive_type == "no_op":
-        return Accepted(NoOp(), explanation)
+        return Accepted(NoOp(), explanation, index_repaired)
 
     # G5 - hours are unique integers 0..23 in ascending order, and there is at least one.
-    hours, repaired = _clean_hours(raw.get("hours"))
+    hours, hours_repaired = _clean_hours(raw.get("hours"))
+    repaired = hours_repaired or index_repaired
     if not hours:
         return GuardrailReject(
             "bad_hours", "hours must list at least one whole hour between 0 and 23."
