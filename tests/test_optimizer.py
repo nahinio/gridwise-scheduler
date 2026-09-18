@@ -198,3 +198,12 @@ def test_any_feasible_scenario_yields_a_valid_plan_no_worse_than_idle(
     _strictly_valid(request, directives, outcome)
     baseline = idle_plan(request, merge(request, directives))
     assert outcome.result.total_cost_bdt <= baseline.total_cost_bdt + 0.01
+
+
+def test_scheduling_stage_is_time_boxed() -> None:
+    """With no time left the stage still answers at once, with the battery-idle plan."""
+    request = make_request()
+    outcome = plan_schedule(request, [NoOp()], budget_s=0.0)
+    assert outcome.fallback == "idle"
+    assert {p.battery_action for p in outcome.result.plan} == {"idle"}
+    assert replay_and_check(request, [NoOp()], outcome.result.plan) == []

@@ -13,6 +13,7 @@ Per hour h: grid g, solar used s, charge c, discharge d (all >= 0).
 from __future__ import annotations
 
 import math
+import time
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from itertools import combinations
@@ -39,6 +40,8 @@ _IDLE_EPS = 1e-9
 # Total objective weight spent on discouraging battery throughput. It only breaks ties
 # between equal-cost optima (no pointless cycling); the true cost moves by < 0.001 BDT.
 _THROUGHPUT_BUDGET_BDT = 1e-3
+# Hard ceiling for the whole scheduling stage (a solve normally takes ~5 ms).
+SCHEDULE_BUDGET_S = 8.0
 
 
 @dataclass(frozen=True)
@@ -58,8 +61,10 @@ class ScheduleOutcome:
     violations: list[Violation] = field(default_factory=list)
 
 
-def _solve_lp(request: OptimizeRequest, limits: HourlyConstraints) -> np.ndarray | None:
-    """Return the LP optimum as an (4, 24) array [g, s, c, d], or None when infeasible."""
+def _solve_lp(
+    request: OptimizeRequest, limits: HourlyConstraints, time_limit_s: float = 5.0
+) -> np.ndarray | None:
+    """Return the LP optimum as an (4, 24) array [g, s, c, d]; None if infeasible or timed out."""
     battery = request.battery
     demand = np.array([entry.demand_kwh for entry in request.hours])
     tariff = np.array([entry.tariff_bdt_per_kwh for entry in request.hours])
@@ -93,7 +98,14 @@ def _solve_lp(request: OptimizeRequest, limits: HourlyConstraints) -> np.ndarray
 
     try:
         solution = linprog(
-            cost, A_ub=a_ub, b_ub=b_ub, A_eq=a_eq, b_eq=b_eq, bounds=bounds, method="highs"
+            cost,
+            A_ub=a_ub,
+            b_ub=b_ub,
+            A_eq=a_eq,
+            b_eq=b_eq,
+            bounds=bounds,
+            method="highs",
+            options={"time_limit": max(0.1, time_limit_s)},  # a solve normally takes ~5 ms
         )
     except ValueError:
         return None
@@ -172,9 +184,11 @@ def _with_totals(request: OptimizeRequest, plan: list[HourPlan]) -> PlanResult:
     )
 
 
-def solve(request: OptimizeRequest, limits: HourlyConstraints) -> PlanResult | None:
-    """Cheapest valid plan under `limits`, or None if the constraints cannot be met."""
-    raw = _solve_lp(request, limits)
+def solve(
+    request: OptimizeRequest, limits: HourlyConstraints, time_limit_s: float = 5.0
+) -> PlanResult | None:
+    """Cheapest valid plan under `limits`; None if the constraints cannot be met in time."""
+    raw = _solve_lp(request, limits, time_limit_s)
     if raw is None:
         return None
     _, solar, charge, discharge = raw
@@ -219,8 +233,13 @@ def _drop_rank(directive: Directive) -> int:
     return 2
 
 
-def plan_schedule(request: OptimizeRequest, directives: Sequence[Directive]) -> ScheduleOutcome:
+def plan_schedule(
+    request: OptimizeRequest, directives: Sequence[Directive], budget_s: float = SCHEDULE_BUDGET_S
+) -> ScheduleOutcome:
     """Optimize under all directives; degrade in a controlled, logged way if that fails.
+
+    The whole stage is time-boxed (`budget_s`): every solve gets only the time that is left,
+    and when it runs out the battery-idle plan is returned instead of a late response.
 
     Organizer scenarios are feasible under the true directives, so infeasibility means one
     of *our* interpretations is wrong. We then keep the largest feasible subset of
@@ -237,9 +256,13 @@ def plan_schedule(request: OptimizeRequest, directives: Sequence[Directive]) -> 
         candidates += drops
 
     all_directives = list(directives)
+    deadline = time.monotonic() + budget_s
     for dropped in candidates:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
         kept = [d for i, d in enumerate(directives) if i not in dropped]
-        result = solve(request, merge(request, kept))
+        result = solve(request, merge(request, kept), remaining)
         if result is None:
             continue
         violations = _check(request, kept, result, STRICT_TOLERANCE)

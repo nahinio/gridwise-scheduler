@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import json
 import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import structlog
@@ -14,8 +15,9 @@ from pydantic import ValidationError
 
 from app.errors import BadRequest, validation_detail
 from app.llm import NoteInterpreter
+from app.merge import merge
 from app.metrics import Metrics
-from app.optimizer import plan_schedule
+from app.optimizer import SCHEDULE_BUDGET_S, ScheduleOutcome, idle_plan, plan_schedule
 from app.schemas import (
     DirectiveInterpretation,
     HealthResponse,
@@ -27,6 +29,12 @@ from app.summary import build_summary
 
 log = structlog.get_logger(__name__)
 router = APIRouter(tags=["Required - judged"])
+
+# Every LP solve runs on ONE long-lived thread. The native solver stack (HiGHS / BLAS) was
+# measured to segfault or deadlock when entered from short-lived or freshly spawned threads,
+# which is exactly what a default thread pool does under a burst of requests. A solve takes
+# ~5 ms, so serialising them costs nothing and keeps the event loop free.
+_SOLVER_THREAD = ThreadPoolExecutor(max_workers=1, thread_name_prefix="lp-solver")
 
 _REQUEST_BODY = {
     "required": True,
@@ -91,9 +99,20 @@ async def optimize_energy(request: Request) -> OptimizeResponse:
     directives = [item.directive for item in interpreted]
     llm_ms = (time.monotonic() - started) * 1000
 
-    # 2. Exact LP + replay validation, off the event loop.
+    # 2. Exact LP + replay validation, off the event loop, on the dedicated solver thread.
     lp_started = time.monotonic()
-    outcome = await asyncio.to_thread(plan_schedule, scenario, directives)
+    try:
+        outcome = await asyncio.wait_for(
+            asyncio.get_running_loop().run_in_executor(
+                _SOLVER_THREAD, plan_schedule, scenario, directives
+            ),
+            SCHEDULE_BUDGET_S + 2,
+        )
+    except TimeoutError:  # never expected; answer with the always-available idle plan
+        log.error("schedule_stage_timeout")
+        metrics.inc("schedule_fallback", "stage_timeout")
+        limits = merge(scenario, directives)
+        outcome = ScheduleOutcome(idle_plan(scenario, limits), directives, [], "idle")
     metrics.observe("lp_ms", (time.monotonic() - lp_started) * 1000)
 
     if outcome.fallback:

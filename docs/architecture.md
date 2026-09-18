@@ -88,6 +88,12 @@ The optimizer and the validator both consume exactly these arrays.
   difference, the action is its sign, and `grid_kwh` is the residual of the balance
   equation. Bounds, rates and neutrality are therefore exact rather than "close".
 - Totals are summed from the final plan — never taken from the LP objective.
+- **Threading.** All solves go through one long-lived `lp-solver` thread. Found by stress test:
+  one *new* thread per solve segfaulted (exit 139) in 2 of 3 runs and overlapping new threads
+  deadlocked in 3 of 3, whereas 16 long-lived threads (1,800 solves) and one dedicated thread
+  (1,200 solves) were clean. `asyncio.to_thread` creates threads on demand during a burst, so
+  it was replaced. The stage is time-boxed as well: HiGHS gets a `time_limit`, relaxation shares
+  an 8 s budget, and the API waits at most budget + 2 s before answering with the idle plan.
 
 ### Failure ladder
 

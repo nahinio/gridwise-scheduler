@@ -57,3 +57,4 @@ ignore_missing_imports = true
 asyncio_mode = "auto"
 testpaths = ["tests"]
 filterwarnings = ["ignore::DeprecationWarning"]
+faulthandler_timeout = 60  # a stalled test dumps every thread's stack instead of hanging silently
