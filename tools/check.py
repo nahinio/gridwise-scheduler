@@ -55,7 +55,8 @@ def judge_case(client: httpx.Client, case: dict[str, Any], save: bool) -> tuple[
         return ["FAIL", "FAIL", "FAIL", "response does not match the schema"], latency
     if save:
         path = SAMPLES / f"{case['id']}.output.json"
-        path.write_text(json.dumps(raw, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        text = json.dumps(raw, indent=2, ensure_ascii=False) + "\n"
+        path.write_text(text, encoding="utf-8", newline="\n")
 
     problems: list[str] = []
     if body.scenario_id != case["input"]["scenario_id"]:
