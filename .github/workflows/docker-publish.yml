@@ -5,7 +5,7 @@ on:
     branches: [main]
     tags: ["v*"]
     # Docs-only commits must not move the published image away from the digest pinned in README.
-    paths-ignore: ["**.md", "docs/**", "evals/**", "LICENSE"]
+    paths-ignore: ["**.md", "docs/**", "evals/**", "deploy/**", "LICENSE"]
   workflow_dispatch:
 
 permissions:
