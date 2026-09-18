@@ -13,7 +13,7 @@
         ],
         "max_grid_kwh": 155.0
       },
-      "explanation": "Grid import is capped at 155 kWh per hour in the window."
+      "explanation": "Grid import is capped at 155 kWh per hour from 18:00 to 21:00."
     }
   ],
   "hourly_plan": [

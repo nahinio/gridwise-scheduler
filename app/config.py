@@ -37,7 +37,7 @@ class Settings(BaseSettings):
 
     llm_timeout_s: float = 6.0
     llm_total_budget_s: float = 12.0
-    llm_max_concurrency: int = 16
+    llm_max_concurrency: int = 48
     llm_max_output_tokens: int = 600
     crosscheck_enabled: bool = True
 

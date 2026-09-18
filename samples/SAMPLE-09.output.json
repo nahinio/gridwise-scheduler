@@ -13,14 +13,14 @@
         ],
         "factor": 0.2
       },
-      "explanation": "Usable solar is limited to 0.2 of forecast in the stated window."
+      "explanation": "An 80% solar reduction leaves 20% of forecast from 11:00 to 14:00."
     },
     {
       "note_index": 1,
       "applies": false,
       "directive_type": "no_op",
       "structured_adjustment": null,
-      "explanation": "No explicit limit on today's schedule was recognised."
+      "explanation": "The note refers to tomorrow and does not limit today's energy operation."
     }
   ],
   "hourly_plan": [

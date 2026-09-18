@@ -13,7 +13,7 @@
         ],
         "minimum_energy_kwh": 100.0
       },
-      "explanation": "At least 100 kWh must stay in the battery in the window."
+      "explanation": "At least 100 kWh must stay in the battery from 18:00 to 21:00."
     }
   ],
   "hourly_plan": [

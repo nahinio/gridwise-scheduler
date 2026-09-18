@@ -14,7 +14,7 @@
         ],
         "minimum_energy_kwh": 90.0
       },
-      "explanation": "At least 90 kWh must stay in the battery in the window."
+      "explanation": "At least 90 kWh must stay in the battery from 18:00 to 22:00."
     },
     {
       "note_index": 1,
@@ -27,7 +27,7 @@
         ],
         "max_grid_kwh": 180.0
       },
-      "explanation": "Grid import is capped at 180 kWh per hour in the window."
+      "explanation": "Grid import is capped at 180 kWh per hour from 19:00 to 21:00."
     }
   ],
   "hourly_plan": [

@@ -12,7 +12,7 @@
         ],
         "factor": 0.5
       },
-      "explanation": "Usable solar is limited to 0.5 of forecast in the stated window."
+      "explanation": "Solar output remains at about half of forecast from 10:00 to 12:00."
     },
     {
       "note_index": 1,
@@ -24,14 +24,14 @@
           15
         ]
       },
-      "explanation": "Battery charging is unavailable in the window."
+      "explanation": "Charging is unavailable from 14:00 to 16:00."
     },
     {
       "note_index": 2,
       "applies": false,
       "directive_type": "no_op",
       "structured_adjustment": null,
-      "explanation": "No explicit limit on today's schedule was recognised."
+      "explanation": "The note is about library hours next week, not today's energy operation."
     }
   ],
   "hourly_plan": [

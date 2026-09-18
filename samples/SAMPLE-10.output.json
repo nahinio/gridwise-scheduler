@@ -14,7 +14,7 @@
         ],
         "minimum_energy_kwh": 80.0
       },
-      "explanation": "At least 80 kWh must stay in the battery in the window."
+      "explanation": "At least 80 kWh must stay in the battery from 18:00 to 22:00."
     },
     {
       "note_index": 1,
@@ -28,14 +28,14 @@
         ],
         "max_grid_kwh": 190.0
       },
-      "explanation": "Grid import is capped at 190 kWh per hour in the window."
+      "explanation": "Grid import is capped at 190 kWh per hour from 19:00 to 22:00."
     },
     {
       "note_index": 2,
       "applies": false,
       "directive_type": "no_op",
       "structured_adjustment": null,
-      "explanation": "No explicit limit on today's schedule was recognised."
+      "explanation": "The note concerns a booking moved to next week, not today's energy operation."
     }
   ],
   "hourly_plan": [

@@ -140,7 +140,7 @@ RESULT: PASS
 `interp` compares the machine-checked interpretation fields with the official expected
 output; `valid` replays our plan under the **organizer's** directives (not ours); `cost delta`
 is our recomputed cost minus the organizer's optimum (always `+0.0000`: the LP is exact).
-Latency depends on the LLM provider (typically ~1 s per request; ~10 ms on cache hits).
+Latency depends on the LLM provider (measured ~1.5 s per request; ~10 ms when every note is cached).
 
 ---
 
@@ -310,6 +310,7 @@ subject to  g_h + s_h + d_h − c_h = demand_h                      energy balan
   and neutrality therefore hold exactly rather than "within rounding".
 - **Overlapping directives** merge to the tightest limit: solar factors multiply, reserves take
   the max, grid caps take the min, windows union.
+- **One dedicated solver thread.** Every solve runs on a single long-lived thread (`lp-solver`). We measured the native solver stack segfaulting or deadlocking when entered from short-lived / freshly spawned threads — what a default thread pool does under a request burst — while a dedicated thread was clean over thousands of solves. A solve takes ~5 ms, so serialising costs nothing; the stage is also time-boxed (8 s budget, HiGHS `time_limit`), after which the battery-idle plan is returned instead of a late response.
 - **Controlled relaxation:** organizer scenarios are feasible under the true directives, so an
   infeasible LP means one of *our* interpretations is wrong. The service then keeps the
   largest feasible subset of directives (dropping grid caps first, then reserves, then
@@ -390,7 +391,7 @@ Template: [`.env.example`](.env.example).
 | `GEMINI_API_KEY` | — | Optional second vendor; hop skipped when empty. |
 | `GEMINI_BASE_URL` / `GEMINI_MODEL` | Google OpenAI-compat / `gemini-2.5-flash` | |
 | `LLM_TIMEOUT_S` / `LLM_TOTAL_BUDGET_S` | `6` / `12` | Per-call timeout / per-request interpretation deadline. |
-| `LLM_MAX_CONCURRENCY` | `16` | Simultaneous provider calls. |
+| `LLM_MAX_CONCURRENCY` | `48` | Simultaneous provider calls (20 concurrent 3-note requests fit in one wave). |
 | `CACHE_MAX_ENTRIES` | `5000` | LRU of validated interpretations (fallback results are never cached). |
 | `CROSSCHECK_ENABLED` | `true` | Guardrail G11. |
 | `ENABLE_OPTIONAL_ENDPOINTS` | `true` | `/stats`, `/interpret`. |
@@ -403,11 +404,11 @@ Template: [`.env.example`](.env.example).
 ```bash
 uv sync                                   # runtime + dev dependencies, locked
 uv run python -m app                      # serve on :8000
-uv run pytest -q                          # 288 tests, no keys, ~10 s
+uv run pytest -q                          # 289 tests, no keys, ~10 s
 uv run ruff check . && uv run ruff format --check . && uv run mypy app tools
 uv run python -m tools.check --url http://localhost:8000 --edge --save-samples
 uv run python -m tools.eval --repeat 3    # needs OPENAI_API_KEY
-uv run python -m tools.load --url http://localhost:8000 --concurrency 20 --n 100
+uv run python -m tools.load --url http://localhost:8000 --concurrency 20 --n 40 --unique-notes
 uv run python -m tools.make_samples       # regenerate samples/*.input.json + evals/public_cases.jsonl
 ```
 
@@ -430,16 +431,22 @@ docs/       architecture.md · official/ (the three organizer files, unmodified)
 | 1. Deterministic | `uv run pytest -q` | All 10 reference plans are valid under the judge clone; 17 plan mutations are each caught; **our cost equals the organizer optimum on 10/10 cases**; property tests (Hypothesis) — any feasible random scenario yields a strictly valid plan no worse than battery-idle; guardrails never raise and never emit an out-of-range directive on fuzzed model output; the provider chain (timeout, 429, bad JSON, guardrail reject, deadline, all-providers-down, cache, single-flight, cross-check) with scripted fakes; the HTTP contract (status codes, schema, order, echo, malformed pack, 20 concurrent, no traceback leakage). No API key needed. |
 | 2. LLM evals | `uv run python -m tools.eval` | Real-provider accuracy on 89 notes by family (time, quantity, charge-vs-discharge, chatter, distractors, injection, unsupported types, Bangla, Banglish, noise): applies / type / exact hours / numeric ±0.01 / full match, confusion matrix, fallback rate, latency, tokens, run-to-run consistency. Gates: public 100 %, paraphrases ≥ 95 %, distractors 100 %, adversarial 100 %. |
 | 3. Acceptance | `uv run python -m tools.check --url … --edge` | Judges a **running** service: interpretation vs expected, replay under the organizer's directives, cost delta, latency, malformed-input behaviour, 20-request burst. |
-| 4. Load | `uv run python -m tools.load …` | p50 / p95 / max and error count at concurrency 20. |
+| 4. Load | `uv run python -m tools.load … --unique-notes` | p50 / p95 / max and error count at concurrency 20; `--unique-notes` makes every note textually unique so the cache cannot flatter the numbers. |
 
-Measured locally (single process, Windows laptop, **deterministic-reader mode, no LLM key**):
-acceptance 10/10, cost delta +0.0000 on every case, p95 13 ms sequential; load test 100
-requests at concurrency 20 → 0 errors, p95 238 ms. With a live LLM, request latency is
-dominated by the provider (one parallel round of calls).
+### Measured results (single process, laptop, live `gpt-5.4-mini`, interpretation cache **off**)
 
-A note on the eval sets: the deterministic reader was developed against these same notes, so
-its score on them says nothing about unseen wording — that is precisely why the LLM is the
-interpreter and the reader is only a fallback. It cannot read Bangla or Banglish at all.
+| Check | Result |
+|---|---|
+| LLM eval, 89 notes × 3 runs | **100 %** applies / type / hours / numeric on every family, incl. Bangla, Banglish, injection and unsupported-type notes · 89/89 answered first try by the primary model · **89/89 identical across the 3 runs** · 0 guardrail rejects · 0 cross-check re-asks |
+| Acceptance (`tools/check --edge`) | 10/10 interpretation · 10/10 valid under organizer directives · cost delta +0.0000 on every case · **p50 1.6 s, p95 1.9 s** · edge pack all ok |
+| Burst (`tools/load --concurrency 20 --n 40 --unique-notes`) | every note unique, so no cache or de-duplication help: **0 errors, p50 2.0 s, p95 2.8 s**, no rate-limit hits |
+| Heavy burst (`tools/load --concurrency 50 --n 300`, notes cached) | 300 requests, 50 at a time, all through the single solver thread: **0 errors, p95 0.46 s**; service healthy afterwards |
+
+Honest caveats: the eval notes were written by the same team that wrote the prompt, so 100 %
+here is a regression gate, not a promise about unseen wording. And the deterministic reader
+was developed against these same notes — its score on them says nothing about paraphrases it
+has never seen, and it cannot read Bangla or Banglish at all. That is precisely why the LLM
+is the interpreter and the reader is only a fallback.
 
 ---
 

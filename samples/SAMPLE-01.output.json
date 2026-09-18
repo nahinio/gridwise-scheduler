@@ -12,14 +12,14 @@
         ],
         "factor": 0.25
       },
-      "explanation": "Usable solar is limited to 0.25 of forecast in the stated window."
+      "explanation": "Usable solar is reduced to 25% from 12:00 to 14:00 during panel cleaning."
     },
     {
       "note_index": 1,
       "applies": false,
       "directive_type": "no_op",
       "structured_adjustment": null,
-      "explanation": "No explicit limit on today's schedule was recognised."
+      "explanation": "The note is about a deadline next month, not today's energy operation."
     }
   ],
   "hourly_plan": [

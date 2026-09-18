@@ -11,6 +11,7 @@ import argparse
 import asyncio
 import sys
 import time
+from typing import Any
 
 import httpx
 
@@ -19,7 +20,16 @@ from tools.common import load_public_cases, percentile, utf8_stdout
 P95_TARGET_S = 5.0
 
 
-async def run(url: str, concurrency: int, total: int, timeout: float) -> int:
+def unique_copy(scenario: dict[str, Any], index: int) -> dict[str, Any]:
+    """Same scenario, but every note is textually unique: defeats the cache and single-flight,
+    so each request really costs one LLM call per note (the hidden-set worst case)."""
+    notes = [
+        f"{note} (work order {index}-{n})" for n, note in enumerate(scenario["operator_notes"])
+    ]
+    return {**scenario, "operator_notes": notes}
+
+
+async def run(url: str, concurrency: int, total: int, timeout: float, unique: bool) -> int:
     inputs = [case["input"] for case in load_public_cases()]
     gate = asyncio.Semaphore(concurrency)
     latencies: list[float] = []
@@ -33,8 +43,10 @@ async def run(url: str, concurrency: int, total: int, timeout: float) -> int:
             async with gate:
                 started = time.perf_counter()
                 try:
+                    scenario = inputs[index % len(inputs)]
                     response = await client.post(
-                        "/optimize-energy", json=inputs[index % len(inputs)]
+                        "/optimize-energy",
+                        json=unique_copy(scenario, index) if unique else scenario,
                     )
                     if response.status_code != 200:
                         errors.append(f"HTTP {response.status_code}")
@@ -66,8 +78,11 @@ def main() -> int:
     parser.add_argument("--concurrency", type=int, default=20)
     parser.add_argument("--n", type=int, default=100, help="total requests")
     parser.add_argument("--timeout", type=float, default=30.0)
+    parser.add_argument(
+        "--unique-notes", action="store_true", help="make every note unique (no cache help)"
+    )
     args = parser.parse_args()
-    return asyncio.run(run(args.url, args.concurrency, args.n, args.timeout))
+    return asyncio.run(run(args.url, args.concurrency, args.n, args.timeout, args.unique_notes))
 
 
 if __name__ == "__main__":
