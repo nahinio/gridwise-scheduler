@@ -22,6 +22,7 @@ Built for **BUP CSE Fest 2026 Hackathon · Online Preliminary · GridWise challe
 
 | | |
 |---|---|
+| **Live endpoint** | **https://gridwise-scheduler-production.up.railway.app** — try [`/health`](https://gridwise-scheduler-production.up.railway.app/health) · [`/docs`](https://gridwise-scheduler-production.up.railway.app/docs) |
 | Required endpoints | `GET /health` · `POST /optimize-energy` |
 | Port | `8000` (override with `PORT`), bound to `0.0.0.0` |
 | Fallback image | `ghcr.io/nahinio/gridwise-scheduler@sha256:c0df46e03d054fe22f2086fc4186bb4b891d864aeec15ed2490f7618a0c512d1` — public, also tagged `sha-a4e01e318aac371d39c6de822dd3364b62bc9591` |
@@ -465,6 +466,24 @@ is the interpreter and the reader is only a fallback.
 ---
 
 ## 12. Deployment
+
+**Live:** https://gridwise-scheduler-production.up.railway.app — Railway (Southeast Asia region),
+one always-on replica running the pinned image below, `PORT=8000`, `OPENAI_API_KEY` set as a
+service variable, health check on `/health`, serverless/sleep disabled.
+
+Measured against the live URL from an outside network with `tools/check --edge` and
+`tools/load --unique-notes`: 10/10 cases (interpretation, validity under organizer directives,
+cost delta +0.0000), edge pack all ok, p50 1.9 s / p95 3.1 s sequential; burst of 40 requests
+at concurrency 20 with all-unique notes → 0 errors, p95 3.7 s; every note answered by the
+primary LLM (0 fallbacks). Server-side: LLM p50 1.1 s, LP p50 7 ms.
+
+```bash
+# verify the live deployment yourself
+curl https://gridwise-scheduler-production.up.railway.app/health
+uv run python -m tools.check --url https://gridwise-scheduler-production.up.railway.app --edge
+```
+
+The same image anywhere else:
 
 ```bash
 docker run -d --name gridwise --restart unless-stopped -p 8000:8000 \
