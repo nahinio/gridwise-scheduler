@@ -24,7 +24,7 @@ Built for **BUP CSE Fest 2026 Hackathon · Online Preliminary · GridWise challe
 |---|---|
 | Required endpoints | `GET /health` · `POST /optimize-energy` |
 | Port | `8000` (override with `PORT`), bound to `0.0.0.0` |
-| Fallback image | `ghcr.io/nahinio/gridwise-scheduler` (tag `main`, and `sha-<commit>` per build) |
+| Fallback image | `ghcr.io/nahinio/gridwise-scheduler@sha256:c0df46e03d054fe22f2086fc4186bb4b891d864aeec15ed2490f7618a0c512d1` — public, also tagged `sha-a4e01e318aac371d39c6de822dd3364b62bc9591` |
 | Secrets needed to boot | none — without a key the service starts in a clearly-logged degraded mode |
 
 ---
@@ -58,10 +58,12 @@ the service, then run the checks in D.
 ### A. Docker fallback image (recommended)
 
 ```bash
-docker pull ghcr.io/nahinio/gridwise-scheduler:main
-docker run --rm -p 8000:8000 -e OPENAI_API_KEY=<your-key> ghcr.io/nahinio/gridwise-scheduler:main
+docker pull ghcr.io/nahinio/gridwise-scheduler@sha256:c0df46e03d054fe22f2086fc4186bb4b891d864aeec15ed2490f7618a0c512d1
+docker run --rm -p 8000:8000 -e OPENAI_API_KEY=<your-key> ghcr.io/nahinio/gridwise-scheduler@sha256:c0df46e03d054fe22f2086fc4186bb4b891d864aeec15ed2490f7618a0c512d1
 ```
 
+The digest is the exact image that passed CI (started with no secrets, `/health` green,
+`tools/check --edge` green inside the workflow). It is public: no `docker login` needed.
 The image contains no secrets. `-e OPENAI_API_KEY=...` enables the LLM interpreter; leave it
 out and the container still starts and answers (degraded mode, see [§3](#3-how-the-llm-is-used)).
 
@@ -466,10 +468,11 @@ is the interpreter and the reader is only a fallback.
 
 ```bash
 docker run -d --name gridwise --restart unless-stopped -p 8000:8000 \
-  -e OPENAI_API_KEY=<your-key> ghcr.io/nahinio/gridwise-scheduler:main
+  -e OPENAI_API_KEY=<your-key> \
+  ghcr.io/nahinio/gridwise-scheduler@sha256:c0df46e03d054fe22f2086fc4186bb4b891d864aeec15ed2490f7618a0c512d1
 ```
 
-- `.github/workflows/docker-publish.yml` builds the image on every push to `main`, **starts it with no secrets, waits for `/health`, runs `tools/check.py --edge` against the container**, and only then pushes `ghcr.io/nahinio/gridwise-scheduler:sha-<full-commit>` and `:main`; the digest is printed in the job summary.
+- `.github/workflows/docker-publish.yml` builds the image on every push to `main`, **starts it with no secrets, waits for `/health`, runs `tools/check.py --edge` against the container**, and only then pushes `ghcr.io/nahinio/gridwise-scheduler:sha-<full-commit>` and `:main`; the digest is printed in the job summary. Docs-only commits do not rebuild the image, so the pinned digest stays the current code.
 - `HEALTHCHECK` is built into the image; cold start to `/health` is a few seconds; nothing is downloaded at runtime.
 - Host requirement: an always-on machine or paid tier (a sleeping free tier would turn the first judged request into a timeout).
 
