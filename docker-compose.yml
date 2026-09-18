@@ -1,0 +1,12 @@
+# Local convenience only: one service, no other infrastructure.
+#   docker compose up --build
+services:
+  api:
+    build: .
+    image: gridwise-scheduler:local
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
