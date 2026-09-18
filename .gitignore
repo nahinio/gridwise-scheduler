@@ -26,3 +26,7 @@ htmlcov/
 .idea/
 .DS_Store
 Thumbs.db
+
+# local screenshots
+/image.png
+/*.png
