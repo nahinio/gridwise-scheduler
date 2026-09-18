@@ -1,12 +1,12 @@
-"""Acceptance runner: judge a running service the way the organizers do.
+"""Acceptance runner: verify a running service end to end against the public case pack.
 
     python -m tools.check --url http://localhost:8000            # 10 public cases
     python -m tools.check --url https://<host> --edge            # + malformed / burst pack
     python -m tools.check --url http://localhost:8000 --save-samples
 
 For every public case it checks: HTTP 200, response schema, scenario_id echo, the
-machine-checked interpretation fields, a replay of the returned plan under the ORGANIZER's
-expected directives (not ours), reported totals, and cost within 0.01 of the reference.
+machine-checked interpretation fields, a replay of the returned plan under the REFERENCE
+directives (not the service's own), reported totals, and cost within 0.01 of the reference.
 Exit code is non-zero on any failure.
 """
 
@@ -36,7 +36,7 @@ from tools.common import (
 )
 
 
-def judge_case(client: httpx.Client, case: dict[str, Any], save: bool) -> tuple[list[str], float]:
+def check_case(client: httpx.Client, case: dict[str, Any], save: bool) -> tuple[list[str], float]:
     """Returns ([interp, valid, cost, detail], latency_seconds) for one public case."""
     expected = case["expected_output"]
     started = time.perf_counter()
@@ -170,7 +170,7 @@ def main() -> int:
 
         rows, latencies = [], []
         for case in cases:
-            cells, latency = judge_case(client, case, args.save_samples)
+            cells, latency = check_case(client, case, args.save_samples)
             latencies.append(latency)
             failed |= any(cell.startswith("FAIL") for cell in cells[:3])
             rows.append([case["id"], *cells[:3], f"{latency * 1000:.0f} ms", cells[3]])

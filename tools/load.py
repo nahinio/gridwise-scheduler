@@ -2,7 +2,7 @@
 
     python -m tools.load --url http://localhost:8000 --concurrency 20 --n 100
 
-Pass criteria mirror the rubric: zero failed requests and p95 <= 5 s.
+Pass criteria: zero failed requests and p95 <= 5 s.
 """
 
 from __future__ import annotations

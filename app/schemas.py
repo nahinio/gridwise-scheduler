@@ -152,7 +152,7 @@ def structured_adjustment(directive: Directive) -> dict[str, Any] | None:
 
 
 def directive_from_adjustment(directive_type: str, adjustment: dict[str, Any] | None) -> Directive:
-    """Inverse of `structured_adjustment` - used to load organizer ground truth in tools/tests."""
+    """Inverse of `structured_adjustment`: loads reference interpretations in tools and tests."""
     fields = dict(adjustment or {})
     if "hours" in fields:
         fields["hours"] = tuple(fields["hours"])

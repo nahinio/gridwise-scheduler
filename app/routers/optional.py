@@ -1,6 +1,6 @@
-"""Optional endpoints - NOT part of the judged contract.
+"""Optional endpoints - not part of the core contract.
 
-Observability and debugging only. They share nothing with the judged request path except
+Observability and debugging only. They share nothing with the core request path except
 pure functions, and can be switched off with ENABLE_OPTIONAL_ENDPOINTS=false.
 """
 
@@ -13,11 +13,11 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas import DirectiveInterpretation, NonNegFloat
 
-router = APIRouter(tags=["Optional - not judged"])
+router = APIRouter(tags=["Optional"])
 
 _DISCLAIMER = (
-    "Not required by the Problem Statement. Provided for observability/debugging. "
-    "The judged contract is GET /health and POST /optimize-energy only."
+    "Provided for observability and debugging. "
+    "The core contract is GET /health and POST /optimize-energy only."
 )
 
 

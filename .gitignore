@@ -30,3 +30,6 @@ Thumbs.db
 # local screenshots
 /image.png
 /*.png
+
+# internal planning notes (kept locally, not published)
+/plan.md

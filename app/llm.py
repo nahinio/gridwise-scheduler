@@ -2,7 +2,7 @@
 
 Per note:  primary model -> (one corrective re-ask) -> fallback model -> optional second
 vendor -> deterministic reader. Every hop is bounded by a per-call timeout AND by one
-request-wide deadline, so interpretation can never push a response past the judge's
+request-wide deadline, so interpretation can never push a response past the client's
 timeout. No provider failure ever surfaces as an HTTP 5xx.
 """
 

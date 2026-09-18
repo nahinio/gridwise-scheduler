@@ -32,7 +32,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # The image is only published if it behaves like the judged service: it must start
+      # The image is only published if it behaves like the production service: it must start
       # with NO keys, turn /health green, and pass the acceptance runner on the public pack.
       - name: Start container (no secrets)
         run: docker run -d --name gridwise -p 8000:8000 gridwise-scheduler:ci

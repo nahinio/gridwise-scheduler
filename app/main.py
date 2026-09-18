@@ -25,14 +25,14 @@ from app.schemas import OptimizeRequest, SemanticError
 log = structlog.get_logger(__name__)
 
 _DESCRIPTION = """\
-LLM-assisted 24-hour campus energy scheduler (BUP CSE Fest 2026 - GridWise).
+LLM-assisted 24-hour campus energy scheduler.
 
 **Pipeline:** operator notes -> LLM interpreter -> deterministic guardrails -> directive merge
--> exact LP optimizer (HiGHS) -> judge-clone replay validator -> response.
+-> exact LP optimizer (HiGHS) -> replay validator -> response.
 """
 _TAGS = [
-    {"name": "Required - judged", "description": "The contract the judge harness exercises."},
-    {"name": "Optional - not judged", "description": "Observability and debugging helpers."},
+    {"name": "Core", "description": "The service contract."},
+    {"name": "Optional", "description": "Observability and debugging helpers."},
 ]
 
 
@@ -114,7 +114,7 @@ def create_app(
 
 
 def _document_request_body(app: FastAPI) -> None:
-    """The judged route parses its body by hand (any Content-Type, exact 400 mapping), so
+    """The main route parses its body by hand (any Content-Type, exact 400 mapping), so
     its request schema is added to the OpenAPI document explicitly."""
     generate = app.openapi
 

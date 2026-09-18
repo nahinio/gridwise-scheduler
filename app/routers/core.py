@@ -1,4 +1,4 @@
-"""The judged contract: GET /health and POST /optimize-energy."""
+"""Core contract: GET /health and POST /optimize-energy."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ from app.schemas import (
 from app.summary import build_summary
 
 log = structlog.get_logger(__name__)
-router = APIRouter(tags=["Required - judged"])
+router = APIRouter(tags=["Core"])
 
 # Every LP solve runs on ONE long-lived thread. The native solver stack (HiGHS / BLAS) was
 # measured to segfault or deadlock when entered from short-lived or freshly spawned threads,

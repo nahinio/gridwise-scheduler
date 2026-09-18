@@ -41,7 +41,7 @@ def _strictly_valid(request: OptimizeRequest, directives: list[Directive], outco
     )
 
 
-def test_public_cases_match_the_organizer_optimum(public_case: PublicCase) -> None:
+def test_public_cases_match_the_reference_optimum(public_case: PublicCase) -> None:
     outcome = plan_schedule(public_case.request, public_case.directives)
     assert outcome.fallback is None
     _strictly_valid(public_case.request, public_case.directives, outcome)
@@ -51,7 +51,7 @@ def test_public_cases_match_the_organizer_optimum(public_case: PublicCase) -> No
 
 
 def test_plan_never_charges_and_discharges_pointlessly(public_case: PublicCase) -> None:
-    """Tie-breaking keeps battery throughput no higher than the organizer's reference."""
+    """Tie-breaking keeps battery throughput no higher than the reference plan."""
     ours = sum(
         p.battery_kwh
         for p in plan_schedule(public_case.request, public_case.directives).result.plan

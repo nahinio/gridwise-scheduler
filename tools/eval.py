@@ -6,7 +6,8 @@
     python -m tools.eval --files paraphrases distractors --no-crosscheck
 
 Each JSONL line: {"id", "family", "capacity_kwh", "note", "expected": {"directive_type",
-"structured_adjustment"}}. Scoring uses the same machine-checked fields as the judge.
+"structured_adjustment"}}. Only machine-checked fields are scored; free-text explanations
+are ignored.
 Deploy gates: public_cases 100%, paraphrases >= 95%, distractors 100%, adversarial 100%.
 """
 

@@ -8,7 +8,7 @@ from typing import Any
 from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Judge tolerance (Problem Statement 11.5). Internal checks use STRICT_TOLERANCE for margin.
+# Accepted numeric tolerance of the specification. Internal checks use STRICT_TOLERANCE for margin.
 TOLERANCE_KWH = 0.01
 TOLERANCE_BDT = 0.01
 STRICT_TOLERANCE = 1e-6
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
 
     gemini_api_key: SecretStr | None = None
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.5-flash-lite"
 
     llm_timeout_s: float = 6.0
     llm_total_budget_s: float = 12.0

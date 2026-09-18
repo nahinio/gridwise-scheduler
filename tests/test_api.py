@@ -29,7 +29,7 @@ GROUND_TRUTH: dict[str, dict[str, Any]] = {
 
 
 class OracleProvider:
-    """Answers public notes with the organizer's ground truth, in the model's flat format."""
+    """Answers public notes with the reference interpretation, in the model's flat format."""
 
     name = "openai:oracle"
 
@@ -99,7 +99,7 @@ async def test_public_cases_end_to_end(client: httpx.AsyncClient, public_case: P
     ]
     assert all(e["explanation"] for e in body["directive_interpretation"])
 
-    # Replay exactly as the judge does: organizer directives, strict tolerance.
+    # Replay independently: reference directives, strict tolerance.
     violations = replay_and_check(
         public_case.request,
         public_case.directives,
@@ -270,8 +270,8 @@ async def test_unknown_routes_and_methods_use_the_envelope(client: httpx.AsyncCl
 
 
 async def test_request_id_is_echoed(client: httpx.AsyncClient) -> None:
-    response = await client.get("/health", headers={"X-Request-ID": "judge-42"})
-    assert response.headers["X-Request-ID"] == "judge-42"
+    response = await client.get("/health", headers={"X-Request-ID": "client-42"})
+    assert response.headers["X-Request-ID"] == "client-42"
     assert (await client.get("/health")).headers["X-Request-ID"]
 
 

@@ -1,4 +1,4 @@
-"""The judge clone: organizer reference plans pass, every broken rule is named."""
+"""Replay validator: reference plans pass, every broken rule is named."""
 
 from __future__ import annotations
 
@@ -100,7 +100,7 @@ def test_reported_totals_must_match_the_plan(field: str) -> None:
 
 
 def test_directive_the_plan_ignores_invalidates_it() -> None:
-    """The judge replays with ITS directives: a plan built without them must fail."""
+    """A plan is replayed under the TRUE directives: one built without them must fail."""
     unconstrained, constrained = CASE["SAMPLE-03"], CASE["SAMPLE-05"]
     # SAMPLE-03 and SAMPLE-05 share demand/solar/tariff but not the battery or directive,
     # so SAMPLE-03's plan replayed under SAMPLE-05's scenario cannot be valid.

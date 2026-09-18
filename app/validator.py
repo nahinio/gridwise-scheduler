@@ -1,7 +1,7 @@
-"""Judge-clone replay of a 24-hour plan (Problem Statement sections 09 and 11). Pure.
+"""Independent replay of a 24-hour plan against every rule of the specification. Pure.
 
 The same function guards every API response, backs the test-suite, and is what
-`tools/check.py` runs against a live deployment with the organizer's expected directives.
+`tools/check.py` runs against a live deployment with the reference directives.
 """
 
 from __future__ import annotations

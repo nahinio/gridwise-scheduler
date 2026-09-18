@@ -241,7 +241,7 @@ def plan_schedule(
     The whole stage is time-boxed (`budget_s`): every solve gets only the time that is left,
     and when it runs out the battery-idle plan is returned instead of a late response.
 
-    Organizer scenarios are feasible under the true directives, so infeasibility means one
+    Valid scenarios are feasible under their true directives, so infeasibility means one
     of *our* interpretations is wrong. We then keep the largest feasible subset of
     directives rather than returning an error or an arbitrary plan.
     """

@@ -15,7 +15,8 @@ from typing import Any
 import structlog
 
 _SECRET_PATTERNS = re.compile(
-    r"(sk-[A-Za-z0-9_\-]{8,}|gsk_[A-Za-z0-9]{8,}|AIza[0-9A-Za-z_\-]{10,}|Bearer\s+\S+)"
+    r"(sk-[A-Za-z0-9_\-]{8,}|gsk_[A-Za-z0-9]{8,}|AIza[0-9A-Za-z_\-]{10,}|AQ\.[0-9A-Za-z_\-]{20,}|"
+    r"Bearer\s+\S+)"
 )
 _MASK = "***"
 
