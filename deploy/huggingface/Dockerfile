@@ -1,7 +1,7 @@
 # Hugging Face Space (Docker SDK) for GridWise Scheduler.
 # Runs the exact image that passed CI; nothing is rebuilt here.
 # Note: since mid-2026 creating a Docker Space requires a paid Hugging Face plan (PRO/Team).
-FROM ghcr.io/nahinio/gridwise-scheduler@sha256:c0df46e03d054fe22f2086fc4186bb4b891d864aeec15ed2490f7618a0c512d1
+FROM ghcr.io/nahinio/gridwise-scheduler@sha256:c7f733c81c33b988cec6da3604aed4fb6a1ac0f4a20ef843132d9316651fbfcb
 
 # Spaces run containers as uid 1000, so give that uid a real account and home directory.
 USER root

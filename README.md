@@ -45,7 +45,7 @@ flowchart LR
 
 ```bash
 docker run --rm -p 8000:8000 -e OPENAI_API_KEY=<your-key> \
-  ghcr.io/nahinio/gridwise-scheduler@sha256:c0df46e03d054fe22f2086fc4186bb4b891d864aeec15ed2490f7618a0c512d1
+  ghcr.io/nahinio/gridwise-scheduler@sha256:c7f733c81c33b988cec6da3604aed4fb6a1ac0f4a20ef843132d9316651fbfcb
 ```
 
 **From source** — Python 3.11+:
@@ -304,7 +304,7 @@ then publishes to GHCR.
 ```bash
 docker run -d --restart unless-stopped -p 8000:8000 \
   -e OPENAI_API_KEY=<your-key> -e GEMINI_API_KEY=<optional> \
-  ghcr.io/nahinio/gridwise-scheduler@sha256:c0df46e03d054fe22f2086fc4186bb4b891d864aeec15ed2490f7618a0c512d1
+  ghcr.io/nahinio/gridwise-scheduler@sha256:c7f733c81c33b988cec6da3604aed4fb6a1ac0f4a20ef843132d9316651fbfcb
 ```
 
 ## Security
