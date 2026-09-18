@@ -321,11 +321,11 @@ Each module lists: purpose, public interface, rules it enforces (with rubric tra
 class Settings(BaseSettings):
     openai_api_key: SecretStr | None = None
     openai_model: str = "gpt-5.4-mini"
-    openai_reasoning_effort: Literal["none","minimal","low"] = "none"
+    openai_reasoning_effort: Literal["none", "minimal", "low"] = "none"
     openai_fallback_model: str = "gpt-5.4-nano"
     gemini_api_key: SecretStr | None = None  # optional second vendor; hop skipped when None
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
-    gemini_model: str = "gemini-2.5-flash"    # verify exact id on the day via the models endpoint
+    gemini_model: str = "gemini-2.5-flash"  # verify exact id on the day via the models endpoint
     llm_timeout_s: float = 8.0
     llm_max_concurrency: int = 8
     cache_max_entries: int = 5000
@@ -334,6 +334,7 @@ class Settings(BaseSettings):
     port: int = 8000
     log_level: str = "INFO"
     enable_optional_endpoints: bool = True
+
 
 TOLERANCE_KWH = 0.01
 TOLERANCE_BDT = 0.01
@@ -354,12 +355,38 @@ Request (mirrors §07 of the Problem Statement, `extra="forbid"` on every model)
 Directive union (used for LLM output, guardrail output, and response):
 
 ```python
-class SolarReduction(BaseModel):  directive_type: Literal["solar_reduction"]; hours: list[int]; factor: float
-class MinReserve(BaseModel):      directive_type: Literal["minimum_battery_reserve"]; hours: list[int]; minimum_energy_kwh: float
-class NoCharge(BaseModel):        directive_type: Literal["no_charge_window"]; hours: list[int]
-class NoDischarge(BaseModel):     directive_type: Literal["no_discharge_window"]; hours: list[int]
-class MaxGrid(BaseModel):         directive_type: Literal["max_grid_window"]; hours: list[int]; max_grid_kwh: float
-class NoOp(BaseModel):            directive_type: Literal["no_op"]
+class SolarReduction(BaseModel):
+    directive_type: Literal["solar_reduction"]
+    hours: list[int]
+    factor: float
+
+
+class MinReserve(BaseModel):
+    directive_type: Literal["minimum_battery_reserve"]
+    hours: list[int]
+    minimum_energy_kwh: float
+
+
+class NoCharge(BaseModel):
+    directive_type: Literal["no_charge_window"]
+    hours: list[int]
+
+
+class NoDischarge(BaseModel):
+    directive_type: Literal["no_discharge_window"]
+    hours: list[int]
+
+
+class MaxGrid(BaseModel):
+    directive_type: Literal["max_grid_window"]
+    hours: list[int]
+    max_grid_kwh: float
+
+
+class NoOp(BaseModel):
+    directive_type: Literal["no_op"]
+
+
 Directive = Annotated[Union[...], Field(discriminator="directive_type")]
 ```
 
