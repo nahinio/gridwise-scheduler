@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ GridWise Scheduler
+# GridWise Scheduler
 
 **Plain-English operator notes in. A provably cheapest, fully validated 24-hour energy plan out.**
 
@@ -335,4 +335,4 @@ Claude Code was used as a coding assistant. The problem definition and public sc
 from the GridWise challenge (BUP CSE Fest 2026); the original material is kept unmodified in
 [`docs/official/`](docs/official/).
 
-**Team** · [@nahinio](https://github.com/nahinio) &nbsp;·&nbsp; **License** · [MIT](LICENSE)
+**Team: Attention is All You Need** · Najib Hossain Nahin, Al-Muktadir Islam Mahit, Khondaker Zarifa Haque, Sharon Ahammed &nbsp;·&nbsp; **License** · [MIT](LICENSE)
