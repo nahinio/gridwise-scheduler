@@ -1,0 +1,18 @@
+{"id": "dist-01", "family": "distractor", "capacity_kwh": 200, "note": "The cafeteria menu changes tomorrow.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-02", "family": "distractor", "capacity_kwh": 200, "note": "The sports office moved next month's registration deadline.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-03", "family": "distractor", "capacity_kwh": 200, "note": "The library is extending book-return hours next week.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-04", "family": "distractor", "capacity_kwh": 200, "note": "A seminar room booking was moved to next week.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-05", "family": "distractor", "capacity_kwh": 200, "note": "The solar team meets at 3 PM in room 204.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-06", "family": "distractor", "capacity_kwh": 200, "note": "Panels were cleaned yesterday between 1 PM and 3 PM.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-07", "family": "distractor", "capacity_kwh": 200, "note": "Next week the charger will be replaced from 2 PM to 4 PM.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-08", "family": "distractor", "capacity_kwh": 200, "note": "The transformer at the city campus (not ours) is limited to 100 kWh from 6 PM to 9 PM.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-09", "family": "distractor", "capacity_kwh": 200, "note": "Please forward this note to facilities.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-10", "family": "distractor", "capacity_kwh": 200, "note": "The battery report is due Friday at 5 PM.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-11", "family": "distractor", "capacity_kwh": 200, "note": "Tomorrow's forecast is sunny with full solar output.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-12", "family": "distractor", "capacity_kwh": 200, "note": "The grid tariff will change next month.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-13", "family": "distractor", "capacity_kwh": 200, "note": "Tomorrow the battery must keep 120 kWh from 6 PM to 9 PM.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-14", "family": "distractor", "capacity_kwh": 200, "note": "The energy club is hosting a solar workshop from 2 PM to 4 PM.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-15", "family": "distractor", "capacity_kwh": 200, "note": "Last month the feeder was limited to 150 kWh between 6 PM and 9 PM.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-16", "family": "distractor", "capacity_kwh": 200, "note": "A new battery vendor will present at 11 AM.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-17", "family": "distractor", "capacity_kwh": 200, "note": "Parking lot B is closed from 6 PM to 9 PM for resurfacing.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}
+{"id": "dist-18", "family": "distractor", "capacity_kwh": 200, "note": "The student affairs office will publish club notices tomorrow.", "expected": {"directive_type": "no_op", "structured_adjustment": null}}

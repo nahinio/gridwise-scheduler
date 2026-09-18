@@ -43,7 +43,18 @@ _TOKEN = re.compile(
     )(?![\w%:])""",
     re.VERBOSE,
 )
-_SEPARATOR = re.compile(r"^\s*(?:to|until|till|til|through|thru|up\s?to|and|-)\s*$")
+_SEPARATOR = re.compile(
+    r"^\s*(?:in the (?:morning|afternoon|evening)|at night|tonight)?\s*"
+    r"(?:to|until|till|til|through|thru|up\s?to|and|-)\s*$"
+)
+_MILITARY_RANGE = re.compile(
+    r"\b([01]\d|2[0-3])([0-5]\d)\s*(?:-|to)\s*([01]\d|2[0-4])([0-5]\d)\b(?!\s*(?:kwh|kw\b))"
+)
+_OPEN_END = re.compile(r"\b(before|prior to|until|till)\s+(?:about\s+)?$")
+_OPEN_START = re.compile(r"\b(after|from|starting at|beginning at)\s+(?:about\s+)?$")
+_ONWARDS = re.compile(r"^\s*(?:tonight\s+)?(?:onwards?|on\b|until the end of the day)")
+_ELSEWHERE = re.compile(r"\b(not ours|another (?:campus|site)|other (?:campus|site)|off-?site)\b")
+_SENTENCES = re.compile(r"(?<=[.!?;])\s+")
 _EVENING = re.compile(r"\b(afternoon|evening|tonight|night)\b")
 _MORNING = re.compile(r"\bmorning\b")
 _ALL_DAY = re.compile(r"\b(all day|entire day|whole day|throughout the day|the full day)\b")
@@ -54,7 +65,7 @@ _NOT_TODAY = re.compile(
 )
 
 _PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*(?:%|percent|per\s?cent)")
-_ENERGY = re.compile(r"(\d+(?:\.\d+)?)\s*(?:kwh|kw\b|kilowatt)")
+_ENERGY = re.compile(r"(\d+(?:\.\d+)?)\s*(mwh|mw\b|kwh|kw\b|kilowatt)")
 _FRACTIONS: tuple[tuple[re.Pattern[str], float], ...] = tuple(
     (re.compile(pattern), value)
     for pattern, value in (
@@ -85,12 +96,15 @@ _BLOCKED = (
     r"(?:not|no|never|cannot|can't|don't|avoid|without|unavailable|disabled|isolated|offline|"
     r"out of service|suspend|prohibit|forbid|block|lock|halt|stop|pause|maintenance|inspect)"
 )
-_DISCHARGE = re.compile(r"discharg|\b(drain|release energy|supply (?:the )?loads?|battery output)")
+_DISCHARGE = re.compile(
+    r"discharg|\b(drain\w*|release energy|battery output|"
+    r"(?:supply|feed|power|export)\w*\s+(?:to\s+)?(?:the\s+|campus\s+)*(?:loads?|bus|buildings?))"
+)
 _HOLD = re.compile(r"\b(hold (?:its|the) (?:energy|charge)|output disabled)\b")
 _CHARGE = re.compile(r"(?<!dis)charg|\b(top[- ]?up|take energy|absorb|refill|store energy)\b")
 _RESERVE = re.compile(
     r"\b(reserve|at least|no less than|(?:go|drop|fall|dip)s? below|minimum of|keep|retain|"
-    r"remain|maintain|state of charge|soc)\b"
+    r"remain|maintain|state of charge|soc|or more|needs?|requires?)\b"
 )
 _BATTERY = re.compile(r"\b(battery|batteries|storage|bess|state of charge|soc|stored)\b")
 _GRID = re.compile(
@@ -98,7 +112,7 @@ _GRID = re.compile(
 )
 _CAP = re.compile(
     r"\b(exceed|limit\w*|cap\w*|at or below|no more than|not more than|maximum|max|under|below|"
-    r"ceiling|restrict\w*|within)\b"
+    r"ceiling|restrict\w*|within|at most|up to)\b"
 )
 
 
@@ -137,7 +151,7 @@ def normalise(note: str) -> str:
     text = re.sub(r"[‐-―−]", "-", text)
     text = re.sub(r"\b([ap])\.\s?m\.?", r"\1m", text)
     text = re.sub(r"(?<=\d),(?=\d{3}\b)", "", text)
-    return text
+    return _MILITARY_RANGE.sub(r"\1:\2-\3:\4", text)  # "0700-0900" -> "07:00-09:00"
 
 
 def _tokens(text: str) -> list[_Time]:
@@ -221,6 +235,16 @@ def parse_hours(note: str, *, solar_context: bool = False) -> HoursReading | Non
         if reading:
             return reading
 
+    for t in times:  # open-ended: "before 6 am", "after 9 pm", "from 8 pm onwards"
+        if not (t.fixed or t.meridiem):
+            continue
+        hour = t.hour if t.fixed else _clock(t.hour, t.meridiem or "am")
+        if _OPEN_END.search(text[: t.start]) and 0 < hour <= 23:
+            return HoursReading(tuple(range(hour)), False)
+        opener = _OPEN_START.search(text[: t.start])
+        if 0 <= hour <= 23 and opener and (opener[1] == "after" or _ONWARDS.match(text[t.end :])):
+            return HoursReading(tuple(range(hour, 24)), False)
+
     for t in times:  # "at 6 pm", "during the 18:00 hour"
         anchored = re.search(r"\b(at|during|around|for)\s+(the\s+)?$", text[: t.start])
         if (t.fixed or t.meridiem) and (anchored or text[t.end :].lstrip().startswith("hour")):
@@ -260,7 +284,9 @@ def parse_energy(note: str, capacity_kwh: float, *, allow_percent: bool) -> Valu
     text = normalise(note)
     energies = _ENERGY.findall(text)
     if energies:
-        return ValueReading(float(energies[0]), len(energies) == 1)
+        amount, unit = energies[0]
+        scale = 1000.0 if unit.startswith("m") else 1.0
+        return ValueReading(round(float(amount) * scale, 6), len(energies) == 1)
     if allow_percent:
         percents = _PERCENT.findall(text)
         if percents and 0 <= float(percents[0]) <= 100:
@@ -275,9 +301,15 @@ def parse_energy(note: str, capacity_kwh: float, *, allow_percent: bool) -> Valu
 
 def interpret(note: str, capacity_kwh: float) -> HeuristicReading:
     """Best explicit reading of one note; `no_op` whenever a required part is missing."""
-    text = normalise(note)
     no_op = HeuristicReading(NoOp(), "No explicit limit on today's schedule was recognised.")
-    if _NOT_TODAY.search(text):
+    # Sentences about other days or other sites are dropped; the rest is read as one note.
+    note = " ".join(
+        sentence
+        for sentence in _SENTENCES.split(normalise(note))
+        if not _NOT_TODAY.search(sentence) and not _ELSEWHERE.search(sentence)
+    )
+    text = note
+    if not text.strip():
         return no_op
 
     solar = bool(_SOLAR.search(text))
