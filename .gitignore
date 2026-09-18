@@ -1,0 +1,28 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+htmlcov/
+
+# editors / assistants / os
+.claude/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
