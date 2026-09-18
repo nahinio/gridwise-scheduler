@@ -330,8 +330,7 @@ Built with [FastAPI](https://fastapi.tiangolo.com/), [Pydantic](https://docs.pyd
 [SciPy](https://scipy.org/) and the [HiGHS](https://highs.dev/) solver,
 [openai-python](https://github.com/openai/openai-python), [structlog](https://www.structlog.org/),
 [pytest](https://pytest.org/), [Hypothesis](https://hypothesis.works/), [Ruff](https://docs.astral.sh/ruff/),
-[mypy](https://mypy-lang.org/) and [uv](https://docs.astral.sh/uv/). Models by OpenAI and Google.
-Claude Code was used as a coding assistant. The problem definition and public scenarios come
+[mypy](https://mypy-lang.org/) and [uv](https://docs.astral.sh/uv/). Models by OpenAI and Google. The problem definition and public scenarios come
 from the GridWise challenge (BUP CSE Fest 2026); the original material is kept unmodified in
 [`docs/official/`](docs/official/).
 
